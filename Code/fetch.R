@@ -1,22 +1,22 @@
-#' Calculate Wind Fetch
+#### Function to calculate wind fetch ####
 #' 
-#' Wind fetch is the unobstructed length of water over which wind can blow, and
-#' it is commonly used as a measure of exposure to wind and waves at coastal 
-#' sites. The fetch function automatically calculates the wind fetch for
-#' marine locations within the boundaries of the specified coastline layer.
-#' This allows wind fetch to be calculated anywhere around the globe.
+#' Code is adapted from https://github.com/cran/fetchR for use with sf spatial objects
+#' and to improve execution speed
 #' 
-#' The function takes a sf object (with polygon geometry type)
-#, polygon_layer, that represents the coastline, surrounding islands, 
-#' and any other obstructions, and calculates the wind fetch for every specified 
-#' direction. This is calculated for all the user-defined sites, that are 
-#' represented as the point geometries in another
-#' sf object (site_layer).
+#' Fetch, the unobstructed distance over which wind-driven waves can build, is a 
+#' popular proxy for wave exposure at a given location commonly used for site-specific 
+#' evaluations. This fetch function calculates the fetch in a user-specified number of directions
+#' around given locations within a waterbody out to a maximum distance set by the user.
 #' 
-#' The directions for which the wind fetch are calculated for each site are 
+#' The function requires an sf object (with polygon geometry type)
+#' polygon_layer, that represents the coastline and an sf object (point geometry)
+#' that represents the user-defined sites (site layer) for which fetch calculations 
+#' are made.
+#'
+#' The number of directions for which the fetch calculations are made for each site is
 #' determined by the number of directions per quadrant (n_directions). 
-#' The default value of 9 calculates 9 fetch vectors per quadrant (90 degrees), 
-#' or equivalently, one fetch vector every 10 degrees. The first fetch vector is 
+#' The default value (9) calculates 9 fetch vectors 90-degree quadrant, 
+#' (i.e., one fetch vector every 10 degrees). The first fetch vector is 
 #' always calculated for the northerly direction (0/360 degrees).
 #' 
 #' polygon_layer = sf object where the
@@ -151,7 +151,7 @@ fetch = function(polygon_layer, site_layer, max_dist = 300, n_directions = 8,
   # from st_buffer
   directions = unlist(split(directions, directions < 90), use.names = FALSE)
   
-  # Create nested data that calculates and stores Fetch Objects and lengths for
+  # Create nested data that calculates and stores fetch vectors and lengths for
   # each site
   
   message("calculating fetch for ", nrow(site_layer), " sites")
@@ -192,7 +192,7 @@ fetch = function(polygon_layer, site_layer, max_dist = 300, n_directions = 8,
            # Calculate fetch line lengths
            fetch_length = map(fetch_st_lines, st_length)) %>%
     dplyr::select(., site_names, fetch_st_lines, fetch_length) %>%
-    unnest(., cols = c(fetch_length, fetch_st_lines)) %>% 
+    unnest(., cols = c(fetch_length_m, fetch_st_lines)) %>% 
     dplyr::select(-geom)
 
 }

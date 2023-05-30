@@ -9,7 +9,7 @@ library(multidplyr)
 
 # source fetch function
 
-source('fetch.R')
+source('Code/fetch.R')
 
 # Run fetch function in parallel using multidplyr
 
@@ -24,11 +24,13 @@ source('fetch.R')
 #'                not 'm'.
 #' n_directions = numeric. The number of fetch vectors to calculate per 
 #'                quadrant (default 8).
-#' site_var (character) = column name in site_layer sf object holding variable
+#' site_names (character) = column name in site_layer sf object holding variable
 #'                        for site names
 
 fetch_parallel = function(polygon_layer, site_layer, max_dist = 300, 
-                          n_directions = 8, site_var){
+                          n_directions = 8, site_names){
+  
+  site_names = enquo(site_names)
   
   # Determine number of cores available minus 1
   cl <- detectCores() - 1
@@ -43,7 +45,7 @@ fetch_parallel = function(polygon_layer, site_layer, max_dist = 300,
                    polygon_layer = polygon_layer,
                    max_dist = max_dist,
                    n_directions = n_directions,
-                   site_var = site_var)
+                   site_names = site_names)
   
   # Calculate fetch for all survey sites in 11.25 degree increments
   my_fetch_proj <- site_layer %>%
@@ -54,7 +56,7 @@ fetch_parallel = function(polygon_layer, site_layer, max_dist = 300,
              site_layer = .,
              max_dist = max_dist,
              n_directions = n_directions,
-             site_names = pull(., var = site_var))) %>% 
+             site_names = pull(., var = !!site_names))) %>% 
     collect() %>% # combine observations from all clusters
     st_as_sf(sf_column_name = 'geometry') %>% 
     ungroup()
